@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"encoding/json"
 	"log/slog"
 	"net/http"
 
@@ -14,25 +13,19 @@ func (s *MyServer) PostDummyLogin(w http.ResponseWriter, r *http.Request) {
 	slog.Debug("proccessing dummy auth")
 	defer slog.Debug("finished dummy auth")
 
-	var authStruct api.PostDummyLoginJSONBody
-
-	decoder := json.NewDecoder(r.Body)
-	decoder.DisallowUnknownFields()
-	err := decoder.Decode(&authStruct)
+	req, err := decodeBody[api.PostDummyLoginJSONBody](r.Body)
 	if err != nil {
 		sendErrorResponse(w, "bad request body", http.StatusBadRequest)
-		slog.Error("bad request body")
 		return
 	}
-	slog.Debug("body decoded")
 
-	// role validation
-	// if (authStruct.Role != api.PostDummyLoginJSONBodyRole(api.UserRoleModerator)) || (api.UserRole(authStruct.Role) != api.UserRoleEmployee) {
-	// 	slog.Error("bad request body")
-	// 	return
-	// }
+	if !validRole(string(req.Role), api.UserRoleModerator) && !validRole(string(req.Role), api.UserRoleEmployee) {
+		sendErrorResponse(w, "bad request body", http.StatusBadRequest)
+		slog.Error("bad role")
+		return
+	}
 
-	token, err := s.auth.DummyLogin(api.UserRole(authStruct.Role))
+	token, err := s.auth.DummyLogin(api.UserRole(req.Role))
 	if err != nil {
 		sendErrorResponse(w, "bad creditionals", http.StatusBadRequest)
 		slog.Error("token creation error")

@@ -2,10 +2,13 @@ package handler
 
 import (
 	"encoding/json"
+	"errors"
+	"io"
 	"log/slog"
 	"net/http"
 
 	"github.com/Razzle131/pickupPoint/api"
+	"github.com/Razzle131/pickupPoint/internal/repository/userRepo"
 	"github.com/Razzle131/pickupPoint/internal/service/authorization"
 	"github.com/google/uuid"
 )
@@ -21,35 +24,17 @@ type Config struct {
 
 var _ api.ServerInterface = (*MyServer)(nil)
 
-func NewServer() *MyServer {
-	auth := authorization.New()
+func NewServer(ur userRepo.UserRepo) *MyServer {
+	auth := authorization.New(ur)
 
 	return &MyServer{
 		auth: *auth,
 	}
 }
 
-// Авторизация пользователя
-// (POST /login)
-func (s *MyServer) PostLogin(w http.ResponseWriter, r *http.Request) {
-
-}
-
 // Добавление товара в текущую приемку (только для сотрудников ПВЗ)
 // (POST /products)
 func (s *MyServer) PostProducts(w http.ResponseWriter, r *http.Request) {
-
-}
-
-// Получение списка ПВЗ с фильтрацией по дате приемки и пагинацией
-// (GET /pvz)
-func (s *MyServer) GetPvz(w http.ResponseWriter, r *http.Request, params api.GetPvzParams) {
-
-}
-
-// Создание ПВЗ (только для модераторов)
-// (POST /pvz)
-func (s *MyServer) PostPvz(w http.ResponseWriter, r *http.Request) {
 
 }
 
@@ -68,12 +53,6 @@ func (s *MyServer) PostPvzPvzIdDeleteLastProduct(w http.ResponseWriter, r *http.
 // Создание новой приемки товаров (только для сотрудников ПВЗ)
 // (POST /receptions)
 func (s *MyServer) PostReceptions(w http.ResponseWriter, r *http.Request) {
-
-}
-
-// Регистрация пользователя
-// (POST /register)
-func (s *MyServer) PostRegister(w http.ResponseWriter, r *http.Request) {
 
 }
 
@@ -102,4 +81,22 @@ func sendInfoResponse(w http.ResponseWriter, object any) {
 	}
 
 	w.WriteHeader(http.StatusOK)
+}
+
+func validRole(having string, shouldBe api.UserRole) bool {
+	return having == string(shouldBe)
+}
+
+func decodeBody[T any](body io.Reader) (T, error) {
+	var res T
+
+	decoder := json.NewDecoder(body)
+	decoder.DisallowUnknownFields()
+	err := decoder.Decode(&res)
+	if err != nil {
+		return res, errors.New("bad request body")
+	}
+
+	slog.Debug("body decoded")
+	return res, nil
 }
