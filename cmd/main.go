@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/Razzle131/pickupPoint/internal/handler"
+	"github.com/Razzle131/pickupPoint/internal/repository/userRepo"
 	"github.com/Razzle131/pickupPoint/pkg/logger"
 	"github.com/joho/godotenv"
 )
@@ -34,11 +35,28 @@ func main() {
 	// }
 	// defer dbConn.Close()
 
-	myServer := handler.NewServer()
+	// emailTest := types.Email("abobaboba@aa.ss")
+	// res, err := emailTest.MarshalJSON()
+	// if err != nil {
+	// 	slog.Error(err.Error())
+	// 	return
+	// }
+	// slog.Info(string(res))
+
+	// err = emailTest.UnmarshalJSON([]byte(`"abobaboba2@aa.ss"`))
+	// if err != nil {
+	// 	slog.Error(err.Error())
+	// 	return
+	// }
+	// slog.Info(string(emailTest))
+
+	myServer := handler.NewServer(userRepo.NewCache())
 
 	r := http.NewServeMux()
 
 	r.HandleFunc("POST /dummyLogin", myServer.PostDummyLogin)
+	r.HandleFunc("POST /login", myServer.PostLogin)
+	r.HandleFunc("POST /register", myServer.PostRegister)
 	// r.HandleFunc("POST /api/auth", myServer.PostApiAuth)
 	// r.HandleFunc("GET /api/buy/{item}", func(w http.ResponseWriter, r *http.Request) {
 	// 	item := strings.Split(r.URL.Path, "/")[3]
