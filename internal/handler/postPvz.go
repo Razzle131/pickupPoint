@@ -10,12 +10,15 @@ import (
 // Создание ПВЗ (только для модераторов)
 // (POST /pvz)
 func (s *MyServer) PostPvz(w http.ResponseWriter, r *http.Request) {
-	slog.Debug("proccessing register")
-	defer slog.Debug("finished register")
+	slog.Debug("proccessing create pvz")
+	defer slog.Debug("finished create pvz")
 
 	token := r.Header.Get("Authorization")
 
 	role, err := s.auth.ValidateToken(token)
+
+	slog.Debug(string(role))
+
 	if err != nil {
 		sendErrorResponse(w, "bad token", http.StatusBadRequest)
 		return
@@ -32,7 +35,11 @@ func (s *MyServer) PostPvz(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_ = req
-	_ = api.PVZ{}
+	res, err := s.pvz.CreatePvz(req)
+	if err != nil {
+		sendErrorResponse(w, "bad request body", http.StatusBadRequest)
+		return
+	}
 
+	sendInfoResponse(w, res)
 }

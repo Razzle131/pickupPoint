@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/Razzle131/pickupPoint/internal/handler"
+	"github.com/Razzle131/pickupPoint/internal/repository/pvzRepo"
 	"github.com/Razzle131/pickupPoint/internal/repository/userRepo"
 	"github.com/Razzle131/pickupPoint/pkg/logger"
 	"github.com/joho/godotenv"
@@ -50,13 +51,14 @@ func main() {
 	// }
 	// slog.Info(string(emailTest))
 
-	myServer := handler.NewServer(userRepo.NewCache())
+	myServer := handler.NewServer(userRepo.NewCache(), pvzRepo.NewCache())
 
 	r := http.NewServeMux()
 
 	r.HandleFunc("POST /dummyLogin", myServer.PostDummyLogin)
 	r.HandleFunc("POST /login", myServer.PostLogin)
 	r.HandleFunc("POST /register", myServer.PostRegister)
+	r.HandleFunc("POST /pvz", myServer.PostPvz)
 	// r.HandleFunc("POST /api/auth", myServer.PostApiAuth)
 	// r.HandleFunc("GET /api/buy/{item}", func(w http.ResponseWriter, r *http.Request) {
 	// 	item := strings.Split(r.URL.Path, "/")[3]

@@ -8,13 +8,16 @@ import (
 	"net/http"
 
 	"github.com/Razzle131/pickupPoint/api"
+	"github.com/Razzle131/pickupPoint/internal/repository/pvzRepo"
 	"github.com/Razzle131/pickupPoint/internal/repository/userRepo"
 	"github.com/Razzle131/pickupPoint/internal/service/authorization"
+	"github.com/Razzle131/pickupPoint/internal/service/pvz"
 	"github.com/google/uuid"
 )
 
 type MyServer struct {
 	auth authorization.AuthorizationService
+	pvz  pvz.PvzService
 }
 
 type Config struct {
@@ -24,11 +27,13 @@ type Config struct {
 
 var _ api.ServerInterface = (*MyServer)(nil)
 
-func NewServer(ur userRepo.UserRepo) *MyServer {
+func NewServer(ur userRepo.UserRepo, pr pvzRepo.PvzRepo) *MyServer {
 	auth := authorization.New(ur)
+	pvz := pvz.New(pr)
 
 	return &MyServer{
 		auth: *auth,
+		pvz:  *pvz,
 	}
 }
 
