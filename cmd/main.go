@@ -6,7 +6,9 @@ import (
 	"os"
 
 	"github.com/Razzle131/pickupPoint/internal/handler"
+	"github.com/Razzle131/pickupPoint/internal/repository/productRepo"
 	"github.com/Razzle131/pickupPoint/internal/repository/pvzRepo"
+	"github.com/Razzle131/pickupPoint/internal/repository/receptionRepo"
 	"github.com/Razzle131/pickupPoint/internal/repository/userRepo"
 	"github.com/Razzle131/pickupPoint/pkg/logger"
 	"github.com/joho/godotenv"
@@ -51,7 +53,13 @@ func main() {
 	// }
 	// slog.Info(string(emailTest))
 
-	myServer := handler.NewServer(userRepo.NewCache(), pvzRepo.NewCache())
+	// t1 := time.Now()
+	// t2 := time.Now().Add(time.Second * 10)
+
+	// slog.Debug(fmt.Sprint(int(t1.Sub(t2))))
+	// slog.Debug(fmt.Sprint(-2147483648 % 2147483647))
+
+	myServer := handler.NewServer(userRepo.NewCache(), pvzRepo.NewCache(), productRepo.NewCache(), receptionRepo.NewCache())
 
 	r := http.NewServeMux()
 

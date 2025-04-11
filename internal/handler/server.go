@@ -8,7 +8,10 @@ import (
 	"net/http"
 
 	"github.com/Razzle131/pickupPoint/api"
+	"github.com/Razzle131/pickupPoint/internal/repository/productRepo"
+	"github.com/Razzle131/pickupPoint/internal/repository/pvzInfoRepo"
 	"github.com/Razzle131/pickupPoint/internal/repository/pvzRepo"
+	"github.com/Razzle131/pickupPoint/internal/repository/receptionRepo"
 	"github.com/Razzle131/pickupPoint/internal/repository/userRepo"
 	"github.com/Razzle131/pickupPoint/internal/service/authorization"
 	"github.com/Razzle131/pickupPoint/internal/service/pvz"
@@ -27,9 +30,11 @@ type Config struct {
 
 var _ api.ServerInterface = (*MyServer)(nil)
 
-func NewServer(ur userRepo.UserRepo, pr pvzRepo.PvzRepo) *MyServer {
-	auth := authorization.New(ur)
-	pvz := pvz.New(pr)
+func NewServer(userRepo userRepo.UserRepo, pvzRepo pvzRepo.PvzRepo, productRepo productRepo.ProductRepo, receptionRepo receptionRepo.ReceptionRepo) *MyServer {
+	pvzInfoRepo := pvzInfoRepo.NewCache(pvzRepo, productRepo, receptionRepo)
+
+	auth := authorization.New(userRepo)
+	pvz := pvz.New(pvzRepo, pvzInfoRepo)
 
 	return &MyServer{
 		auth: *auth,
