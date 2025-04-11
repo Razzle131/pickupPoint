@@ -15,12 +15,14 @@ import (
 	"github.com/Razzle131/pickupPoint/internal/repository/userRepo"
 	"github.com/Razzle131/pickupPoint/internal/service/authorization"
 	"github.com/Razzle131/pickupPoint/internal/service/pvz"
+	"github.com/Razzle131/pickupPoint/internal/service/reception"
 	"github.com/google/uuid"
 )
 
 type MyServer struct {
-	auth authorization.AuthorizationService
-	pvz  pvz.PvzService
+	auth      authorization.AuthorizationService
+	pvz       pvz.PvzService
+	reception reception.ReceptionService
 }
 
 type Config struct {
@@ -35,17 +37,13 @@ func NewServer(userRepo userRepo.UserRepo, pvzRepo pvzRepo.PvzRepo, productRepo 
 
 	auth := authorization.New(userRepo)
 	pvz := pvz.New(pvzRepo, pvzInfoRepo)
+	reception := reception.New(productRepo, receptionRepo)
 
 	return &MyServer{
-		auth: *auth,
-		pvz:  *pvz,
+		auth:      *auth,
+		pvz:       *pvz,
+		reception: *reception,
 	}
-}
-
-// Добавление товара в текущую приемку (только для сотрудников ПВЗ)
-// (POST /products)
-func (s *MyServer) PostProducts(w http.ResponseWriter, r *http.Request) {
-
 }
 
 // Закрытие последней открытой приемки товаров в рамках ПВЗ
@@ -57,12 +55,6 @@ func (s *MyServer) PostPvzPvzIdCloseLastReception(w http.ResponseWriter, r *http
 // Удаление последнего добавленного товара из текущей приемки (LIFO, только для сотрудников ПВЗ)
 // (POST /pvz/{pvzId}/delete_last_product)
 func (s *MyServer) PostPvzPvzIdDeleteLastProduct(w http.ResponseWriter, r *http.Request, pvzId uuid.UUID) {
-
-}
-
-// Создание новой приемки товаров (только для сотрудников ПВЗ)
-// (POST /receptions)
-func (s *MyServer) PostReceptions(w http.ResponseWriter, r *http.Request) {
 
 }
 

@@ -67,6 +67,8 @@ func main() {
 	r.HandleFunc("POST /login", myServer.PostLogin)
 	r.HandleFunc("POST /register", myServer.PostRegister)
 	r.HandleFunc("POST /pvz", myServer.PostPvz)
+	r.HandleFunc("POST /products", myServer.PostProducts)
+	r.HandleFunc("POST /receptions", myServer.PostReceptions)
 	// r.HandleFunc("POST /api/auth", myServer.PostApiAuth)
 	// r.HandleFunc("GET /api/buy/{item}", func(w http.ResponseWriter, r *http.Request) {
 	// 	item := strings.Split(r.URL.Path, "/")[3]
