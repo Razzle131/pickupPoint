@@ -3,14 +3,10 @@ package pvz
 import (
 	"context"
 	"errors"
-	"time"
 
-	"github.com/Razzle131/pickupPoint/api"
 	"github.com/Razzle131/pickupPoint/internal/dto"
 	"github.com/Razzle131/pickupPoint/internal/repository/pvzInfoRepo"
 	"github.com/Razzle131/pickupPoint/internal/repository/pvzRepo"
-	"github.com/google/uuid"
-	"github.com/oapi-codegen/runtime/types"
 )
 
 type PvzService struct {
@@ -25,41 +21,22 @@ func New(pvzRepo pvzRepo.PvzRepo, pvzInfoRepo pvzInfoRepo.PvzInfoRepo) *PvzServi
 	}
 }
 
-// TODO: мб перенести проверку роли сюда, т.к. роль это по факту не чек входа
-func (s *PvzService) CreatePvz(req api.PVZ) (api.PVZ, error) {
-	reqId := uuid.New()
-	reqDate := time.Now()
+func (s *PvzService) CreatePvz(ctx context.Context, pvz dto.PvzDto) (dto.PvzDto, error) {
+	modelPvz := pvz.ToModel()
 
-	if req.Id != nil {
-		reqId = *req.Id
-	}
-	if req.RegistrationDate != nil {
-		reqDate = *req.RegistrationDate
-	}
-
-	pvz := dto.PvzDto{
-		Id:      reqId,
-		City:    string(req.City),
-		RegDate: reqDate,
-	}
-
-	repoRes, err := s.pvzRepo.AddPvz(context.TODO(), pvz)
+	repoRes, err := s.pvzRepo.AddPvz(ctx, modelPvz)
 	if err != nil {
-		return api.PVZ{}, err
+		return dto.PvzDto{}, err
 	}
 
-	id := types.UUID(repoRes.Id)
-	res := api.PVZ{
-		City:             api.PVZCity(repoRes.City),
-		Id:               &id,
-		RegistrationDate: &repoRes.RegDate,
-	}
+	res := dto.PvzDto{}
+	res.FromModel(repoRes)
 
 	return res, nil
 }
 
-func (s *PvzService) GetPvzInfo(params dto.PvzInfoFilter) ([]dto.PvzInfoDto, error) {
-	res, err := s.pvzInfoRepo.ListPvzInfo(context.TODO(), params)
+func (s *PvzService) GetPvzInfo(ctx context.Context, params dto.PvzInfoFilterDto) ([]dto.PvzInfoDto, error) {
+	res, err := s.pvzInfoRepo.ListPvzInfo(ctx, params)
 	if err != nil {
 		return []dto.PvzInfoDto{}, errors.New("failed to get pvzs info")
 	}

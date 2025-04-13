@@ -3,14 +3,13 @@ package reception
 import (
 	"context"
 	"errors"
-	"fmt"
-	"log/slog"
-	"slices"
 	"time"
 
-	"github.com/Razzle131/pickupPoint/api"
+	"github.com/Razzle131/pickupPoint/internal/consts"
+	"github.com/Razzle131/pickupPoint/internal/dto"
 	"github.com/Razzle131/pickupPoint/internal/model"
 	"github.com/Razzle131/pickupPoint/internal/repository/productRepo"
+	"github.com/Razzle131/pickupPoint/internal/repository/pvzRepo"
 	"github.com/Razzle131/pickupPoint/internal/repository/receptionRepo"
 	"github.com/google/uuid"
 )
@@ -18,102 +17,101 @@ import (
 type ReceptionService struct {
 	products   productRepo.ProductRepo
 	receptions receptionRepo.ReceptionRepo
+	pvzs       pvzRepo.PvzRepo
 }
 
-func New(pr productRepo.ProductRepo, rp receptionRepo.ReceptionRepo) *ReceptionService {
+func New(pr productRepo.ProductRepo, rp receptionRepo.ReceptionRepo, pvzs pvzRepo.PvzRepo) *ReceptionService {
 	return &ReceptionService{
 		products:   pr,
 		receptions: rp,
+		pvzs:       pvzs,
 	}
 }
 
-func (s *ReceptionService) CloseReception(pvzId uuid.UUID) error {
-	reception, err := s.receptions.GetActiveReceptionByPvzId(context.TODO(), pvzId)
+func (s *ReceptionService) CloseReception(ctx context.Context, pvzId uuid.UUID) (dto.ReceptionDto, error) {
+	reception, err := s.receptions.GetActiveReceptionByPvzId(ctx, pvzId)
 	if err != nil {
-		return errors.New("open reception not found")
+		return dto.ReceptionDto{}, errors.New("open reception not found")
 	}
 
-	err = s.receptions.UpdateReceptionStatusById(context.Background(), reception.Id, string(api.Close))
+	repoRes, err := s.receptions.UpdateReceptionStatusById(ctx, reception.Id, consts.ReceptionStatusClosed)
 	if err != nil {
-		return errors.New("failed to update reception status")
+		return dto.ReceptionDto{}, errors.New("failed to update reception status")
 	}
 
-	return nil
+	res := dto.ReceptionDto{}
+	res.FromModel(repoRes)
+
+	return res, nil
 }
 
-// TODO: мб переделать на сортировку в бд и выдачу чисто последнего продукта, чтобы не гонять много данных
-func (s *ReceptionService) RemoveReceptionLastProduct(pvzId uuid.UUID) error {
-	reception, err := s.receptions.GetActiveReceptionByPvzId(context.TODO(), pvzId)
+func (s *ReceptionService) RemoveReceptionLastProduct(ctx context.Context, pvzId uuid.UUID) (dto.ProductDto, error) {
+	reception, err := s.receptions.GetActiveReceptionByPvzId(ctx, pvzId)
 	if err != nil {
-		return errors.New("open reception not found")
+		return dto.ProductDto{}, errors.New("open reception not found")
 	}
 
-	products, err := s.products.GetProductsByReceptionId(context.TODO(), reception.Id)
+	product, err := s.products.GetReceptionLastProduct(ctx, reception.Id)
 	if err != nil {
-		return errors.New("GetProductsByReceptionId error")
+		return dto.ProductDto{}, errors.New("GetProductsByReceptionId error")
 	}
 
-	if len(products) == 0 {
-		return errors.New("nothing to delete")
-	}
-
-	// desc sort by date
-	slices.SortFunc(products, func(a, b model.Product) int {
-		diff := a.Date.Sub(b.Date)
-		if diff < 0 {
-			return 1
-		}
-		if diff > 0 {
-			return -1
-		}
-		return 0
-	})
-
-	slog.Debug(fmt.Sprint(products))
-
-	err = s.products.DeleteProductById(context.TODO(), products[0].Id)
+	err = s.products.DeleteProductById(ctx, product.Id)
 	if err != nil {
-		return errors.New("failed to delete product")
+		return dto.ProductDto{}, errors.New("failed to delete product")
 	}
 
-	return nil
+	res := dto.ProductDto{}
+	res.FromModel(product)
+
+	return res, nil
 }
 
-func (s *ReceptionService) AddReception(pvzId uuid.UUID) (model.Reception, error) {
-	_, err := s.receptions.GetActiveReceptionByPvzId(context.TODO(), pvzId)
+func (s *ReceptionService) AddReception(ctx context.Context, pvzId uuid.UUID) (dto.ReceptionDto, error) {
+	_, err := s.pvzs.GetPvzById(ctx, pvzId)
+	if err != nil {
+		return dto.ReceptionDto{}, errors.New("no such pvz")
+	}
+
+	_, err = s.receptions.GetActiveReceptionByPvzId(ctx, pvzId)
 	if err == nil {
-		return model.Reception{}, errors.New("close previous reception first")
+		return dto.ReceptionDto{}, errors.New("close previous reception first")
 	}
 
-	reception, err := s.receptions.AddReception(context.TODO(), model.Reception{
+	reception, err := s.receptions.AddReception(ctx, model.Reception{
 		Id:     uuid.New(),
 		Date:   time.Now(),
 		PvzId:  pvzId,
-		Status: api.InProgress,
+		Status: consts.ReceptionStatusActive,
 	})
 	if err != nil {
-		return model.Reception{}, errors.New("failed to add new reception")
+		return dto.ReceptionDto{}, errors.New("failed to add new reception")
 	}
 
-	return reception, nil
+	res := dto.ReceptionDto{}
+	res.FromModel(reception)
+
+	return res, nil
 }
 
-func (s *ReceptionService) AddProduct(productType string, pvzId uuid.UUID) (model.Product, error) {
-	reception, err := s.receptions.GetActiveReceptionByPvzId(context.TODO(), pvzId)
+func (s *ReceptionService) AddProduct(ctx context.Context, productType string, pvzId uuid.UUID) (dto.ProductDto, error) {
+	reception, err := s.receptions.GetActiveReceptionByPvzId(ctx, pvzId)
 	if err != nil {
-		return model.Product{}, errors.New("no receptions are in progress")
+		return dto.ProductDto{}, errors.New("no receptions are in progress")
 	}
 
-	product, err := s.products.AddProduct(context.TODO(), model.Product{
+	product, err := s.products.AddProduct(ctx, model.Product{
 		Id:          uuid.New(),
 		Date:        time.Now(),
-		Type:        api.ProductType(productType),
+		Type:        productType,
 		ReceptionId: reception.Id,
 	})
-
 	if err != nil {
-		return model.Product{}, err
+		return dto.ProductDto{}, err
 	}
 
-	return product, nil
+	res := dto.ProductDto{}
+	res.FromModel(product)
+
+	return res, nil
 }
