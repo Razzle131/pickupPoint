@@ -9,6 +9,7 @@ import (
 
 type ProductRepo interface {
 	AddProduct(ctx context.Context, product model.Product) (model.Product, error)
-	GetProductsByReceptionId(ctx context.Context, receptionId uuid.UUID) ([]model.Product, error)
 	DeleteProductById(ctx context.Context, productId uuid.UUID) error
+	GetProductsByReceptionId(ctx context.Context, receptionId uuid.UUID) ([]model.Product, error)
+	GetReceptionLastProduct(ctx context.Context, receptionId uuid.UUID) (model.Product, error)
 }

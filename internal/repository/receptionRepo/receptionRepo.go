@@ -11,5 +11,6 @@ type ReceptionRepo interface {
 	AddReception(ctx context.Context, reception model.Reception) (model.Reception, error)
 	GetActiveReceptionByPvzId(ctx context.Context, pvzId uuid.UUID) (model.Reception, error)
 	GetReceptionsByPvzId(ctx context.Context, pvzId uuid.UUID) ([]model.Reception, error)
-	UpdateReceptionStatusById(ctx context.Context, receptionId uuid.UUID, newStatus string) error
+	GetReceptionById(ctx context.Context, id uuid.UUID) (model.Reception, error)
+	UpdateReceptionStatusById(ctx context.Context, receptionId uuid.UUID, newStatus string) (model.Reception, error)
 }

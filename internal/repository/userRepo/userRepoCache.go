@@ -4,9 +4,8 @@ import (
 	"context"
 	"errors"
 
-	"github.com/Razzle131/pickupPoint/internal/dto"
+	"github.com/Razzle131/pickupPoint/internal/consts"
 	"github.com/Razzle131/pickupPoint/internal/model"
-	"github.com/google/uuid"
 )
 
 type UserRepoCache struct {
@@ -15,17 +14,15 @@ type UserRepoCache struct {
 
 func NewCache() *UserRepoCache {
 	return &UserRepoCache{
-		users: make([]model.User, 0, 16),
+		users: make([]model.User, 0, consts.SliceMinCap),
 	}
 }
 
-// TODO: add ctx timeout
-func (r *UserRepoCache) AddUser(ctx context.Context, dto dto.UserDto) (model.User, error) {
-	user := model.User{
-		Id:       uuid.New(),
-		Email:    dto.Email,
-		Password: dto.Password,
-		Role:     dto.Role,
+func (r *UserRepoCache) AddUser(ctx context.Context, user model.User) (model.User, error) {
+	for _, u := range r.users {
+		if u.Id == user.Id || u.Email == user.Email {
+			return model.User{}, errors.New("not unique id")
+		}
 	}
 
 	r.users = append(r.users, user)

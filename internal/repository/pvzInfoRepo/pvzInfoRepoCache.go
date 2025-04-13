@@ -26,7 +26,8 @@ func NewCache(pvzRepo pvzRepo.PvzRepo, productRepo productRepo.ProductRepo, rece
 	}
 }
 
-func (r *PvzInfoRepoCache) ListPvzInfo(ctx context.Context, params dto.PvzInfoFilter) ([]dto.PvzInfoDto, error) {
+// TODO: переделать пагинацию и вывод данных (не должно быть пвз без приемок)
+func (r *PvzInfoRepoCache) ListPvzInfo(ctx context.Context, params dto.PvzInfoFilterDto) ([]dto.PvzInfoDto, error) {
 	Pvzs, err := r.pvzRepo.ListPvz(context.TODO(), params)
 	if err != nil {
 		return []dto.PvzInfoDto{}, errors.New("failed to list pvzs")
@@ -42,7 +43,8 @@ func (r *PvzInfoRepoCache) ListPvzInfo(ctx context.Context, params dto.PvzInfoFi
 
 		receptionsInfo := make([]dto.ReceptionInfoDto, 0, len(receptions))
 		for _, reception := range receptions {
-			if reception.Date.Sub(params.StartDate) < 0 || reception.Date.Sub(params.EndDate) > 0 {
+			if (params.StartDateGiven && reception.Date.Sub(params.StartDate) < 0) ||
+				(params.EndDateGiven && reception.Date.Sub(params.EndDate) > 0) {
 				continue
 			}
 
