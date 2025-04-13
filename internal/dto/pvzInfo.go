@@ -4,6 +4,8 @@ import (
 	"github.com/Razzle131/pickupPoint/internal/model"
 )
 
+// TODO: переделать модели на dto
+
 type ReceptionInfoDto struct {
 	Reception model.Reception
 	Products  []model.Product
