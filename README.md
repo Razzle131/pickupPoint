@@ -110,3 +110,7 @@ ______
 * For some reason, oapi-codegen did not generate response struct for get pvz request, so I placed it in separate file in api directory
 * I made "get pvz" response to hide pickup points without receptions
 * I made "get pvz" response to show receptions without products
+______
+### Input testing
+* email and uuid tested by oapi-codegen
+* I did not add password validation for registration handler, because we can have, for example, ability to use empty passwords, or it will come to the server hashed.
