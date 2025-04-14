@@ -8,13 +8,14 @@ import (
 
 	"github.com/Razzle131/pickupPoint/api"
 	"github.com/Razzle131/pickupPoint/internal/consts"
+	"github.com/google/uuid"
 )
 
-// Создание новой приемки товаров (только для сотрудников ПВЗ)
-// (POST /receptions)
-func (s *MyServer) PostReceptions(w http.ResponseWriter, r *http.Request) {
-	slog.Debug("processing create reception")
-	defer slog.Debug("finished create reception")
+// Закрытие последней открытой приемки товаров в рамках ПВЗ
+// (POST /pvz/{pvzId}/close_last_reception)
+func (s *MyServer) PostPvzPvzIdCloseLastReception(w http.ResponseWriter, r *http.Request, pvzId uuid.UUID) {
+	slog.Debug("processing closing reception")
+	defer slog.Debug("finished closing reception")
 
 	ctx, cancel := context.WithTimeout(context.Background(), consts.ContextTimeout)
 	defer cancel()
@@ -34,21 +35,14 @@ func (s *MyServer) PostReceptions(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	req, err := decodeBody[api.PostReceptionsJSONBody](r.Body)
+	serviceRes, err := s.reception.CloseReception(ctx, pvzId)
 	if err != nil {
-		slog.Error(fmt.Sprintf("decode body error: %s", err.Error()))
-		sendErrorResponse(w, "bad request", http.StatusBadRequest)
-		return
-	}
-
-	serviceRes, err := s.reception.AddReception(ctx, req.PvzId)
-	if err != nil {
-		slog.Error(fmt.Sprintf("add reception error: %s", err.Error()))
-		sendErrorResponse(w, "bad request", http.StatusBadRequest)
+		slog.Error(fmt.Sprintf("failed to close reception error: %s", err.Error()))
+		sendErrorResponse(w, "failed to close reception", http.StatusBadRequest)
 		return
 	}
 
 	res := serviceRes.ToApiModel()
 
-	sendInfoResponse(w, res, http.StatusCreated)
+	sendInfoResponse(w, res, http.StatusOK)
 }

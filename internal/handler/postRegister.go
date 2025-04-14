@@ -1,48 +1,52 @@
 package handler
 
 import (
+	"context"
+	"fmt"
 	"log/slog"
 	"net/http"
 
 	"github.com/Razzle131/pickupPoint/api"
+	"github.com/Razzle131/pickupPoint/internal/consts"
 	"github.com/Razzle131/pickupPoint/internal/dto"
-	"github.com/oapi-codegen/runtime/types"
 )
 
 // Регистрация пользователя
 // (POST /register)
 func (s *MyServer) PostRegister(w http.ResponseWriter, r *http.Request) {
-	slog.Debug("proccessing register")
+	slog.Debug("processing register")
 	defer slog.Debug("finished register")
+
+	ctx, cancel := context.WithTimeout(context.Background(), consts.ContextTimeout)
+	defer cancel()
 
 	req, err := decodeBody[api.PostRegisterJSONBody](r.Body)
 	if err != nil {
-		sendErrorResponse(w, "bad request body", http.StatusBadRequest)
+		slog.Error(fmt.Sprintf("body decode error: %s", err.Error()))
+		sendErrorResponse(w, "bad request", http.StatusBadRequest)
 		return
 	}
 
-	if !validRole(string(req.Role), api.UserRoleModerator) && !validRole(string(req.Role), api.UserRoleEmployee) {
-		sendErrorResponse(w, "bad request body", http.StatusBadRequest)
-		slog.Error("bad role")
-		return
-	}
-
-	user, err := s.auth.Register(dto.UserDto{
+	userDto := dto.UserCreditionalsDto{
 		Email:    string(req.Email),
 		Password: req.Password,
-		Role:     api.UserRole(req.Role),
-	})
-	if err != nil {
-		sendErrorResponse(w, "failed to register user", http.StatusBadRequest)
+		Role:     string(req.Role),
+	}
+
+	if !userDto.IsValidRole() {
+		slog.Error(fmt.Sprintf("bad role: %s", req.Role))
+		sendErrorResponse(w, "bad request", http.StatusBadRequest)
 		return
 	}
 
-	id := types.UUID(user.Id)
-	res := api.User{
-		Email: types.Email(user.Email),
-		Id:    &id,
-		Role:  user.Role,
+	user, err := s.auth.Register(ctx, userDto)
+	if err != nil {
+		slog.Error(fmt.Sprintf("register error: %s", err.Error()))
+		sendErrorResponse(w, "bad request", http.StatusBadRequest)
+		return
 	}
 
-	sendInfoResponse(w, res)
+	res := user.ToApiModel()
+
+	sendInfoResponse(w, res, http.StatusCreated)
 }
