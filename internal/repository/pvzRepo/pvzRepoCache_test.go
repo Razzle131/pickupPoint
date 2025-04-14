@@ -4,7 +4,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Razzle131/pickupPoint/internal/dto"
 	"github.com/Razzle131/pickupPoint/internal/model"
 	"github.com/google/uuid"
 )
@@ -72,14 +71,7 @@ func TestListPvz(t *testing.T) {
 		RegDate: time.Now(),
 	}
 
-	params := dto.PvzInfoFilterDto{
-		StartDateGiven: false,
-		EndDateGiven:   false,
-		Page:           1,
-		Limit:          10,
-	}
-
-	res, err := repo.ListPvz(t.Context(), params)
+	res, err := repo.ListPvz(t.Context())
 	if err != nil {
 		t.Errorf("list pvz error: %s", err.Error())
 	}
@@ -90,7 +82,7 @@ func TestListPvz(t *testing.T) {
 
 	repo.AddPvz(t.Context(), pvz)
 
-	res, err = repo.ListPvz(t.Context(), params)
+	res, err = repo.ListPvz(t.Context())
 	if err != nil {
 		t.Errorf("list pvz error: %s", err.Error())
 	}
@@ -101,21 +93,5 @@ func TestListPvz(t *testing.T) {
 
 	if res[0].Id != pvz.Id || res[0].City != pvz.City || res[0].RegDate != pvz.RegDate {
 		t.Errorf("given data doesnt much input")
-	}
-
-	params.Limit = 0
-	res, err = repo.ListPvz(t.Context(), params)
-	if err != nil {
-		t.Errorf("list pvz error: %s", err.Error())
-	}
-
-	if len(res) != 0 {
-		t.Errorf("bad result data when limit = 0")
-	}
-
-	params.Page = 0
-	_, err = repo.ListPvz(t.Context(), params)
-	if err == nil {
-		t.Errorf("error must occur when given bad params")
 	}
 }

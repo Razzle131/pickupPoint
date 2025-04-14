@@ -69,20 +69,62 @@ func TestListPvzInfo(t *testing.T) {
 		t.Errorf("bad result")
 	}
 
-	if res[0].Pvz != pvz || res[0].Receptions[0].Reception != reception || res[0].Receptions[0].Products[0] != product {
+	if _, found := res[pvz]; !found {
 		t.Errorf("bad result")
 	}
 
-	// TODO: после пагинации сделать тест на нее
-	// params.StartDate = time.Now().Add(time.Hour)
-	// params.StartDateGiven = true
+	products, found := res[pvz][reception]
+	if !found {
+		t.Errorf("bad result")
+	}
 
-	// res, err = repo.ListPvzInfo(t.Context(), params)
-	// if err != nil {
-	// 	t.Errorf("list pvz info error: %s", err.Error())
-	// }
+	if len(products) != 1 {
+		t.Errorf("bad products len: %v", len(products))
+	}
 
-	// if len(res) != 0 {
-	// 	t.Errorf("bad result for start date parameter")
-	// }
+	params.Limit = 1
+	res, err = repo.ListPvzInfo(t.Context(), params)
+	if err != nil {
+		t.Errorf("list pvz info error with limit 1: %s", err.Error())
+	}
+
+	if len(res) != 1 {
+		t.Errorf("bad result")
+	}
+
+	if _, found := res[pvz]; !found {
+		t.Errorf("bad result")
+	}
+
+	products, found = res[pvz][reception]
+	if !found {
+		t.Errorf("bad result")
+	}
+
+	if len(products) != 1 {
+		t.Errorf("bad products len: %v", len(products))
+	}
+
+	params.Page = 20
+	res, err = repo.ListPvzInfo(t.Context(), params)
+	if err != nil {
+		t.Errorf("list pvz info error with limit 1 and page 20: %s", err.Error())
+	}
+
+	if len(res) != 0 {
+		t.Errorf("bad result")
+	}
+
+	params.Page = 1
+	params.Limit = 1
+	params.EndDate = time.Now().Add(time.Hour)
+	params.EndDateGiven = true
+	res, err = repo.ListPvzInfo(t.Context(), params)
+	if err != nil {
+		t.Errorf("list pvz info error with limit 1 and page 20: %s", err.Error())
+	}
+
+	if len(res) != 1 {
+		t.Errorf("bad result")
+	}
 }
