@@ -27,7 +27,6 @@ linters:
     - iface
     - inamedparam
     - ireturn
-    - lll
     - maintidx
     - misspell
     - mnd
