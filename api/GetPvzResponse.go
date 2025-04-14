@@ -1,9 +1,9 @@
 package api
 
 type GetPvzResponse struct {
-	Pvz        PVZ
+	Pvz        PVZ `json:"pvz"`
 	Receptions []struct {
-		Reception Reception
-		Products  []Product
-	}
+		Reception Reception `json:"reception"`
+		Products  []Product `json:"products"`
+	} `json:"receptions"`
 }
