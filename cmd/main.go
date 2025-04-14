@@ -23,9 +23,6 @@ import (
 
 const shutdownTimeout = time.Second * 5
 
-//go:generate go tool oapi-codegen -config ../api/schema/apiConfig.yaml ../api/schema/swagger.yaml
-//go:generate go tool oapi-codegen -config ../api/schema/modelsConfig.yaml ../api/schema/swagger.yaml
-
 func main() {
 	godotenv.Load()
 
