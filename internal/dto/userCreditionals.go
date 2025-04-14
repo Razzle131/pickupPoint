@@ -3,6 +3,7 @@ package dto
 import (
 	"github.com/Razzle131/pickupPoint/internal/consts"
 	"github.com/Razzle131/pickupPoint/internal/model"
+	"github.com/google/uuid"
 )
 
 type UserCreditionalsDto struct {
@@ -23,6 +24,7 @@ func (d *UserCreditionalsDto) FromModel(u model.User) {
 
 func (d UserCreditionalsDto) ToModel() model.User {
 	return model.User{
+		Id:       uuid.New(),
 		Email:    d.Email,
 		Password: d.Password,
 		Role:     d.Role,

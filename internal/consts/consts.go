@@ -33,5 +33,5 @@ var (
 const (
 	SliceMinCap    int           = 16
 	ContextTimeout time.Duration = time.Millisecond * 100
-	HttpTimeout    time.Duration = time.Millisecond * 500
+	HttpTimeout    time.Duration = time.Millisecond * 100
 )

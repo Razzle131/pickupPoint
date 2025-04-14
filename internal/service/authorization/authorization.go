@@ -17,7 +17,7 @@ import (
 var jwtSecret = []byte(os.Getenv("JWT_SECRET"))
 
 const (
-	jwtExpire = 10 * time.Hour
+	jwtExpire = 1 * time.Hour
 )
 
 type jwtClaims struct {

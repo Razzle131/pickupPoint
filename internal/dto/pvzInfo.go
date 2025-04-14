@@ -1,17 +1,11 @@
 package dto
 
-import (
-	"github.com/Razzle131/pickupPoint/internal/model"
-)
-
-// TODO: переделать модели на dto
-
 type ReceptionInfoDto struct {
-	Reception model.Reception
-	Products  []model.Product
+	Reception ReceptionDto
+	Products  []ProductDto
 }
 
 type PvzInfoDto struct {
-	Pvz        model.Pvz
+	Pvz        PvzDto
 	Receptions []ReceptionInfoDto
 }
